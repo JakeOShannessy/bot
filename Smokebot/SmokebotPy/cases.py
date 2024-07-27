@@ -1,10 +1,8 @@
-#!/bin/python
 import json
 import os
 
-
 class Case:
-    def __init__(self, program, path, processes=None, threads=None):
+    def __init__(self, program: str, path: str, processes=None, threads=None):
         self.program = program
         self.path = path
         self.processes = processes
@@ -24,18 +22,7 @@ class Case:
         return self.__ext_path(".ini")
 
 
-class FdsCase(Case):
-    def __init__(self, path, processes=None, threads=None):
-        Case.__init__(self, 'fds', path, processes=processes, threads=threads)
-
-
-class CFastCase(Case):
-    def __init__(self, path, processes=None, threads=None):
-        Case.__init__(self, 'cfast', path,
-                      processes=processes, threads=threads)
-
-
-def get_cases(cases_path: str):
+def get_cases(cases_path: str) -> list[Case]:
     """Get cases from a JSON file"""
     cases = []
     with open(cases_path) as f:
@@ -47,10 +34,6 @@ def get_cases(cases_path: str):
                 # cases_path
                 path = os.path.join(os.path.dirname(cases_path), path)
             print("path:", path)
-            if l["program"] == "fds":
-                cases.append(
-                    FdsCase(path, processes=l.get("n_processes"), threads=l.get("n_threads")))
-            elif l["program"] == "cfast":
-                cases.append(
-                    CFastCase(path, processes=l.get("n_processes"), threads=l.get("n_threads")))
+            cases.append(
+                Case(l["program"], path, processes=l.get("n_processes"), threads=l.get("n_threads")))
     return cases

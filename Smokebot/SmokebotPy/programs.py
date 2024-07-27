@@ -1,4 +1,3 @@
-#!/bin/python
 import tempfile
 import subprocess
 import os
@@ -17,6 +16,33 @@ def run(program, directory, filename, processes=None):
     subprocess.run(args, shell=False,
                    capture_output=False, text=True, cwd=directory)
     print("completed", filename)
+
+
+def git_clone(url, path, branch):
+    print("cloning", url, "to", path)
+    args = ["git", "clone", url, path, "--depth", "1"]
+    if branch:
+        args += ["-b", branch]
+    print(args)
+    subprocess.run(args, shell=False,
+                   capture_output=False, text=True,)
+
+
+def setup_cmake(path, build_path):
+    print("cmake setup for", path)
+    os.makedirs(build_path, exist_ok=True)
+    args = ["cmake", "-B", build_path, "-S", path]
+    print(args)
+    subprocess.run(args, shell=False,
+                   capture_output=False, text=True,)
+
+
+def run_cmake(path, build_path):
+    print("cmake build for", path)
+    args = ["cmake", "--build", build_path]
+    print(args)
+    subprocess.run(args, shell=False,
+                   capture_output=False, text=True,)
 
 
 def run_smv_script(directory, filename, smv_path="smokeview"):
