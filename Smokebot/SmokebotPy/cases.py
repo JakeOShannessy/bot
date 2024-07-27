@@ -33,7 +33,6 @@ def get_cases(cases_path: str) -> list[Case]:
                 # If the input path is not absolute, resolve it relative to
                 # cases_path
                 path = os.path.join(os.path.dirname(cases_path), path)
-            print("path:", path)
             cases.append(
                 Case(l["program"], path, processes=l.get("n_processes"), threads=l.get("n_threads")))
     return cases

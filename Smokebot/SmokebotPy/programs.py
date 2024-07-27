@@ -28,10 +28,14 @@ def git_clone(url, path, branch):
                    capture_output=False, text=True,)
 
 
-def setup_cmake(path, build_path):
+def setup_cmake(path, build_path, release=False):
     print("cmake setup for", path)
     os.makedirs(build_path, exist_ok=True)
     args = ["cmake", "-B", build_path, "-S", path]
+    if release:
+        args.append("-DCMAKE_BUILD_TYPE=Release")
+    else:
+        args.append("-DCMAKE_BUILD_TYPE=Debug")
     print(args)
     subprocess.run(args, shell=False,
                    capture_output=False, text=True,)
@@ -47,7 +51,8 @@ def run_cmake(path, build_path):
 
 def run_smv_script(directory, filename, smv_path="smokeview"):
     print("running", filename)
-    args = [smv_path, "-runscript", filename]
+    args = [os.path.realpath(smv_path), "-runscript", filename]
+    print(args)
     result = subprocess.run(args, shell=False,
                             capture_output=True, text=True, cwd=directory)
     if result.returncode != 0:
