@@ -23,7 +23,6 @@ def git_clone(url, path, branch):
     args = ["git", "clone", url, path, "--depth", "1"]
     if branch:
         args += ["-b", branch]
-    print(args)
     subprocess.run(args, shell=False,
                    capture_output=False, text=True,)
 
@@ -36,7 +35,6 @@ def setup_cmake(path, build_path, release=False):
         args.append("-DCMAKE_BUILD_TYPE=Release")
     else:
         args.append("-DCMAKE_BUILD_TYPE=Debug")
-    print(args)
     subprocess.run(args, shell=False,
                    capture_output=False, text=True,)
 
@@ -44,7 +42,6 @@ def setup_cmake(path, build_path, release=False):
 def run_cmake(path, build_path):
     print("cmake build for", path)
     args = ["cmake", "--build", build_path]
-    print(args)
     subprocess.run(args, shell=False,
                    capture_output=False, text=True,)
 
@@ -52,7 +49,6 @@ def run_cmake(path, build_path):
 def run_smv_script(directory, filename, smv_path="smokeview"):
     print("running", filename)
     args = [os.path.realpath(smv_path), "-runscript", filename]
-    print(args)
     result = subprocess.run(args, shell=False,
                             capture_output=True, text=True, cwd=directory)
     if result.returncode != 0:
@@ -77,8 +73,7 @@ class ImageComparer():
         self.image2 = image2
         self.out_path = out_path
 
-    def compare_images(self, ) -> float:
-        print("comparing", self.image1, self.image2)
+    def compare_images(self) -> float:
         blur1 = os.path.join(self.dir.name, "blur1.png")
         blur2 = os.path.join(self.dir.name, "blur2.png")
         intermediate_path = os.path.join(self.dir.name, "inter1.png")
@@ -93,7 +88,6 @@ class ImageComparer():
         m = cmp_regex.match(output.stderr)
         if m:
             diff = float(m.group(1))
-        print("comparison", output.stdout)
         inter3 = os.path.join(self.dir.name, "out1.png")
         self.composite_image(blur1, blur2, inter3, diff)
         inter5a = os.path.join(self.dir.name, "inter5a.png")
@@ -102,32 +96,26 @@ class ImageComparer():
         self.annotate_image(self.image2, inter5b, "Current")
         subprocess.run(["magick", "montage", inter5a, inter5b, inter3, "-geometry", "+3+1", self.out_path], shell=False,
                        capture_output=False, text=True, cwd=".")
-        print("output", self.out_path)
         return diff
 
     def annotate_image(self, input, output, label):
-        print("labelling", input)
         args = ["magick", input, "-gravity", "Center", "-pointsize",
                 "24", f"label:{label}", "-append"]
         args.append(output)
-        print("label args:", args)
         if os.path.dirname(output):
             os.makedirs(os.path.dirname(output), exist_ok=True)
         subprocess.run(args, shell=False,
                        capture_output=False, text=True, cwd=".")
 
     def blur_image(self, input, output):
-        print("blurring", input)
         args = ["magick", input, "-blur", "0x2"]
         args.append(output)
-        print("blur args:", args)
         if os.path.dirname(output):
             os.makedirs(os.path.dirname(output), exist_ok=True)
         subprocess.run(args, shell=False,
                        capture_output=False, text=True, cwd=".")
 
     def composite_image(self, input1, input2, output, diff):
-        print("composing", input1, input2)
         inter2 = os.path.join(self.dir.name, "inter2.png")
         args = ["magick", "composite", input1,
                 input2, "-compose", "difference", inter2]
@@ -140,6 +128,5 @@ class ImageComparer():
             args2 += ["-gravity", "Center", "-pointsize",
                       "24", f"label:rmse: {diff}", "-append"]
         args2.append(output)
-        print("args2", args2)
         subprocess.run(args2, shell=False,
                        capture_output=False, text=True, cwd=".")

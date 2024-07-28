@@ -12,7 +12,7 @@ import argparse
 import urllib.request
 import platform
 
-p = '.'
+p = '~/smv/Verification'
 
 
 def create_case_dir_name(path):
@@ -132,25 +132,6 @@ class ReferenceImagesZip:
         shutil.copytree(os.path.join(self.unpacked_dir,
                         self.sub_dir), self.images_dir)
 
-    # def __repo_path(self):
-    #     return os.path.join(self.base_path, "repo")
-
-    # def __build_path(self):
-    #     return os.path.join(self.base_path, "build")
-
-    # def setup(self):
-    #     programs.git_clone(self.repo_url, self.__repo_path(), self.branch)
-    #     programs.setup_cmake(self.__repo_path(), self.__build_path())
-    #     programs.run_cmake(self.__repo_path(), self.__build_path())
-
-    # def get_path(self):
-    #     if not self.setup_complete:
-    #         self.setup()
-    #         self.setup_complete = True
-    #     return os.path.join(self.__build_path(), "smokeview")
-
-    # path = property(get_path)
-
     def image_paths(self):
         paths = glob.glob('./**/*.png', recursive=True,
                           root_dir=self.images_dir)
@@ -165,52 +146,22 @@ class RunImages:
         self.root = dir
         if not src:
             self.src = SmvProgramRepo(os.path.join(self.root, "run"))
-            # self.src.path(os.path.join(self.dir, "builds", "base"))
         else:
             self.src = src
         self.cases = cases
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)
-        # self.unpacked_dir = os.path.join(self.dir, "unpacked")
-        # self.sub_dir = sub_dir
-        # self.images_dir = os.path.join(self.dir, "images")
-        # self.zip_path = os.path.join(self.dir, "images.zip")
-        # os.makedirs(self.dir, exist_ok=True)
-        # (path, message) = urllib.request.urlretrieve(url, self.zip_path)
-        # os.makedirs(self.images_dir, exist_ok=True)
-        # os.makedirs(self.unpacked_dir, exist_ok=True)
-        # shutil.unpack_archive(path, self.unpacked_dir)
-        # shutil.rmtree(self.images_dir)
-        # shutil.copytree(os.path.join(self.unpacked_dir,
-        #                 self.sub_dir), self.images_dir)
-
-        # smoke_bot.base_smv = SmvProgramRepo(
-        #     os.path.join(smoke_bot.dir, "builds/base"))
-        # smoke_bot.current_smv = SmvProgramRepo(
-        #     os.path.join(smoke_bot.dir, "builds/current"), url="https://github.com/JakeOShannessy/smv.git", branch="read-object-no-global")
-
-        print(self.src.path)
-        # print(smoke_bot.current_smv.path)
-
-        # print(path)
-        # print(message)
-        # self.repo_url = url
-        # self.base_path = path
-        # self.branch = branch
-        # self.setup_complete = False
         self.dirs = ["SMV_Summary", "SMV_User_Guide",
                      "SMV_Verification_Guide"]
         self.snapshot_path = os.path.join(self.root, "snapshot.zip")
-        # self.run()
-
-    def __base_path(self):
-        return os.path.join(self.root, "base")
+        self.sims_dir = os.path.join(self.root, "sims")
+        self.images_dir = os.path.join(self.root)
 
     def run(self):
-        base_dir = self.__base_path()
-        base_sims_dir = os.path.join(base_dir, "sims")
+        base_sims_dir = self.sims_dir
+        base_images_dir = self.images_dir
         os.makedirs(base_sims_dir, exist_ok=True)
         for dir in self.dirs:
-            os.makedirs(os.path.join(base_dir, "Manuals", dir,
+            os.makedirs(os.path.join(base_images_dir, "Manuals", dir,
                         "SCRIPT_FIGURES"), exist_ok=True)
         # TODO: check that snapshot exists
         print("unpacking", self.snapshot_path, base_sims_dir)
@@ -221,7 +172,8 @@ class RunImages:
         """Run a particular script"""
         print("run", case.path, "with", smv.path, "in", dir)
         # TODO: this is a bit of hack
-        ini_root = os.path.join(p, "Visualization")
+        ini_root = os.path.dirname(case.script_path())
+        # print("ini_root", ini_root)
         ini_files = glob.glob('./**/*.ini', recursive=True,
                               root_dir=ini_root)
         jpeg_files = glob.glob('./**/*.jpg', recursive=True,
@@ -230,14 +182,13 @@ class RunImages:
                               root_dir=ini_root)
         case_rundir = os.path.join(
             dir, create_case_dir_name(case.path))
-        source_script_path = case.script_path()
         (fds_prefix, _) = os.path.splitext(
             os.path.basename(case.path))
         # Copy script file to that dir
-        if os.path.isfile(source_script_path):
+        if os.path.isfile(case.script_path()):
             dest_script_path = os.path.join(
                 case_rundir, case.script_name())
-            shutil.copyfile(source_script_path, dest_script_path)
+            shutil.copyfile(case.script_path(), dest_script_path)
             for file in (ini_files+jpeg_files+png_files):
                 src_path = os.path.join(ini_root, file)
                 dest_path = os.path.join(
@@ -247,46 +198,15 @@ class RunImages:
                 os.remove(stop_path(dest_script_path))
             result = programs.run_smv_script(
                 case_rundir, fds_prefix + ".smv", smv_path=smv.path)
-            # open(stop_path(dest_script_path), 'w')
 
     def run_scripts(self, dir, src):
         print("running scripts", dir, src.path)
-        for case in self.cases:
-            print(case.path)
-        return self.executor.map(self.run_script, itertools.repeat(dir), self.cases, itertools.repeat(src))
-
-    def compare_image(self, file):
-        """Give a filename, compare the base and current"""
-        diff = None
-        current_file = os.path.join(self.__base_path(), "./Manuals", file)
-        comparison_path = None
-        if os.path.isfile(current_file):
-            comparison_path = os.path.join(self.__comparison_path(), file)
-            diff = programs.compare_images(os.path.join(self.__base_path(), "./Manuals", file),
-                                           os.path.join(self.__current_path(), "./Manuals", file), comparison_path)
-            print("diff", diff)
-        diff = {
-            "base": file,
-            "current": current_file,
-            "comparison": comparison_path,
-            "diff": diff
-        }
-        return diff
-
-    def compare_images(self):
-        """Compare all images"""
-        files = glob.glob('./**/*.png', recursive=True,
-                          root_dir=os.path.join(self.__base_path(), "./Manuals"))
-        comparison_dir = self.__comparison_path()
-        os.makedirs(comparison_dir, exist_ok=True)
-        for dir in self.dirs:
-            os.makedirs(os.path.join(comparison_dir, "Manuals", dir,
-                        "SCRIPT_FIGURES"), exist_ok=True)
-        return self.executor.map(self.compare_image, files)
+        return list(self.executor.map(self.run_script, itertools.repeat(dir), self.cases, itertools.repeat(src)))
 
     def image_paths(self):
+        print("globbing", self.images_dir)
         paths = glob.glob('./**/*.png', recursive=True,
-                          root_dir=os.path.join(self.__base_path(), "./Manuals"))
+                          root_dir=self.images_dir)
         added_paths = []
         for path in paths:
             added_paths.append(os.path.join(self.images_dir, path))
@@ -299,143 +219,14 @@ class RunImages:
             self.cases += cases
 
 
-# class Comparison:
-#     def __init__(self, cases: list[Case], snapshot_path: str, base_smv=SmvProgramPath("smokeview"), current_smv=SmvProgramPath("smokeview"), dir="post_dir"):
-#         self.cases = cases
-#         self.root = "comparison"
-#         self.dir = dir
-#         self.snapshot_path = snapshot_path
-#         self.dirs = ["SMV_Summary", "SMV_User_Guide",
-#                      "SMV_Verification_Guide"]
-#         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)
-#         if type(base_smv) is str:
-#             self.base_smv = SmvProgramPath(base_smv)
-#         else:
-#             self.base_smv = base_smv
-#         if type(current_smv) is str:
-#             self.current_smv = SmvProgramPath(current_smv)
-#         else:
-#             self.current_smv = current_smv
-
-#     def __base_path(self):
-#         return os.path.join(self.root, "base")
-
-#     def __current_path(self):
-#         return os.path.join(self.root, "current")
-
-#     def __comparison_path(self):
-#         return os.path.join(self.root, "comparison")
-
-#     def run_base(self):
-#         base_dir = self.__base_path()
-#         base_sims_dir = os.path.join(base_dir, "sims")
-#         os.makedirs(base_sims_dir, exist_ok=True)
-#         for dir in self.dirs:
-#             os.makedirs(os.path.join(base_dir, "Manuals", dir,
-#                         "SCRIPT_FIGURES"), exist_ok=True)
-#         shutil.unpack_archive(self.snapshot_path, base_sims_dir)
-#         self.run_scripts(base_sims_dir, self.base_smv)
-
-#     def run_current(self):
-#         current_dir = self.__current_path()
-#         current_sims_dir = os.path.join(current_dir, "sims")
-#         os.makedirs(current_sims_dir, exist_ok=True)
-#         for dir in self.dirs:
-#             os.makedirs(os.path.join(current_dir, "Manuals", dir,
-#                         "SCRIPT_FIGURES"), exist_ok=True)
-#         shutil.unpack_archive(self.snapshot_path, current_sims_dir)
-#         self.run_scripts(current_sims_dir, self.current_smv)
-
-#     def run(self):
-#         """Run the deafult script for all cases"""
-#         self.run_base()
-#         self.run_current()
-
-#     def run_script(self, dir, case, smv):
-#         """Run a particular script"""
-#         print("run", case.path, "with", smv, "in", dir)
-#         # TODO: this is a bit of hack
-#         ini_root = os.path.join(p, "Visualization")
-#         ini_files = glob.glob('./**/*.ini', recursive=True,
-#                               root_dir=ini_root)
-#         jpeg_files = glob.glob('./**/*.jpg', recursive=True,
-#                                root_dir=ini_root)
-#         png_files = glob.glob('./**/*.png', recursive=True,
-#                               root_dir=ini_root)
-#         case_rundir = os.path.join(
-#             dir, create_case_dir_name(case.path))
-#         source_script_path = case.script_path()
-#         (fds_prefix, _) = os.path.splitext(
-#             os.path.basename(case.path))
-#         # Copy script file to that dir
-#         if os.path.isfile(source_script_path):
-#             dest_script_path = os.path.join(
-#                 case_rundir, case.script_name())
-#             shutil.copyfile(source_script_path, dest_script_path)
-#             for file in (ini_files+jpeg_files+png_files):
-#                 src_path = os.path.join(ini_root, file)
-#                 dest_path = os.path.join(
-#                     case_rundir, os.path.basename(file))
-#                 shutil.copyfile(src_path, dest_path)
-#             if os.path.isfile(stop_path(dest_script_path)):
-#                 os.remove(stop_path(dest_script_path))
-#             programs.run_smv_script(
-#                 case_rundir, fds_prefix + ".smv", smv_path=smv.path)
-#             # open(stop_path(dest_script_path), 'w')
-
-#     def run_scripts(self, dir, smv):
-#         print("smv_path:", smv)
-#         return self.executor.map(self.run_script, itertools.repeat(dir), self.cases, itertools.repeat(smv))
-
-#     def compare_image(self, file):
-#         """Give a filename, compare the base and current"""
-#         diff = None
-#         current_file = os.path.join(self.__base_path(), "./Manuals", file)
-#         comparison_path = None
-#         if os.path.isfile(current_file):
-#             comparison_path = os.path.join(self.__comparison_path(), file)
-#             diff = programs.compare_images(os.path.join(self.__base_path(), "./Manuals", file),
-#                                            os.path.join(self.__current_path(), "./Manuals", file), comparison_path)
-#             print("diff", diff)
-#         diff = {
-#             "base": file,
-#             "current": current_file,
-#             "comparison": comparison_path,
-#             "diff": diff
-#         }
-#         return diff
-
-#     def compare_images(self):
-#         """Compare all images"""
-#         files = glob.glob('./**/*.png', recursive=True,
-#                           root_dir=os.path.join(self.__base_path(), "./Manuals"))
-#         comparison_dir = self.__comparison_path()
-#         os.makedirs(comparison_dir, exist_ok=True)
-#         for dir in self.dirs:
-#             os.makedirs(os.path.join(comparison_dir, "Manuals", dir,
-#                         "SCRIPT_FIGURES"), exist_ok=True)
-#         return self.executor.map(self.compare_image, files)
-
-
-class ComparisonNew:
+class Comparison:
     def __init__(self, image_source_a, image_source_b, dir="post_dir"):
-        self.root = "comparison"
-        self.dir = dir
+        self.root = dir
         self.image_source_a = image_source_a
         self.image_source_b = image_source_b
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)
-
-        # self.snapshot_path = snapshot_path
         self.dirs = ["SMV_Summary", "SMV_User_Guide",
                      "SMV_Verification_Guide"]
-        # if type(base_smv) is str:
-        #     self.base_smv = SmvProgramPath(base_smv)
-        # else:
-        #     self.base_smv = base_smv
-        # if type(current_smv) is str:
-        #     self.current_smv = SmvProgramPath(current_smv)
-        # else:
-        #     self.current_smv = current_smv
 
     def __base_path(self):
         return os.path.join(self.root, "base")
@@ -451,14 +242,6 @@ class ComparisonNew:
 
     def run_current(self):
         self.image_source_b.run()
-        # current_dir = self.__current_path()
-        # current_sims_dir = os.path.join(current_dir, "sims")
-        # os.makedirs(current_sims_dir, exist_ok=True)
-        # for dir in self.dirs:
-        #     os.makedirs(os.path.join(current_dir, "Manuals", dir,
-        #                 "SCRIPT_FIGURES"), exist_ok=True)
-        # shutil.unpack_archive(self.snapshot_path, current_sims_dir)
-        # self.run_scripts(current_sims_dir, self.current_smv)
 
     def run(self):
         """Run the deafult script for all cases"""
@@ -495,22 +278,29 @@ class ComparisonNew:
                 os.remove(stop_path(dest_script_path))
             programs.run_smv_script(
                 case_rundir, fds_prefix + ".smv", smv_path=smv.path)
-            # open(stop_path(dest_script_path), 'w')
 
     def run_scripts(self, dir, smv):
-        print("smv_path:", smv)
-        return self.executor.map(self.run_script, itertools.repeat(dir), self.cases, itertools.repeat(smv))
+        return list(self.executor.map(self.run_script, itertools.repeat(dir), self.cases, itertools.repeat(smv)))
 
-    def compare_image(self, file):
+    def compare_image(self, file, files_b):
         """Give a filename, compare the base and current"""
         diff = None
-        current_file = os.path.join(self.__base_path(), "./Manuals", file)
+        current_file = None
+        for file_b in files_b:
+            if os.path.basename(file) == os.path.basename(file_b):
+                current_file = file_b
+                break
         comparison_path = None
-        if os.path.isfile(current_file):
-            comparison_path = os.path.join(self.__comparison_path(), file)
-            diff = programs.compare_images(os.path.join(self.__base_path(), "./Manuals", file),
-                                           os.path.join(self.__current_path(), "./Manuals", file), comparison_path)
-            print("diff", diff)
+        if not current_file:
+            print("  no current_file", file, current_file)
+        if current_file and os.path.isfile(current_file):
+            comparison_path = os.path.join(
+                self.__comparison_path(), os.path.basename(file))
+            print("comparing", os.path.basename(file),
+                  os.path.basename(current_file))
+            diff = programs.compare_images(
+                file,  current_file, comparison_path)
+            # print("diff", diff)
         diff = {
             "base": file,
             "current": current_file,
@@ -525,10 +315,7 @@ class ComparisonNew:
         files_b = self.image_source_b.image_paths()
         comparison_dir = self.__comparison_path()
         os.makedirs(comparison_dir, exist_ok=True)
-        for dir in self.dirs:
-            os.makedirs(os.path.join(comparison_dir, "Manuals", dir,
-                        "SCRIPT_FIGURES"), exist_ok=True)
-        return self.executor.map(self.compare_image, files_a)
+        return list(self.executor.map(self.compare_image, files_a, itertools.repeat(files_b)))
 
 
 class SmokebotPy:
@@ -538,26 +325,25 @@ class SmokebotPy:
         self.dir = dir
         self.force = force
         if not base_image_source:
-            self.base_image_source = ReferenceImagesZip(
-                dir=os.path.join(self.dir, "images_a"))
-        # for image in t.image_paths():
-        #     print(image)
+            # The default base image source is a reference set hosted online
+            self.base_image_source = ReferenceImagesZip()
 
         if not current_image_source:
-            self.current_image_source = RunImages(
-                cases=get_cases("../../../smv/Verification/scripts/cases.json"), dir=os.path.join(self.dir, "images_b"))
-        # for image in t2.image_paths():
-        #     print(image)
+            # The default current image source is to clone and build from git
+            self.current_image_source = RunImages()
+
+        self.base_image_source.dir = os.path.join(self.dir, "images_a")
+        self.current_image_source.dir = os.path.join(self.dir, "images_b")
 
     def run(self):
         main_suite = Suite(self.cases, dir=os.path.join(
             self.dir, "run_dir"))
         print("snapshot path", main_suite.snapshot_path())
         if self.force or not os.path.isfile(main_suite.snapshot_path()):
-            # main_suite.run()
+            main_suite.run()
             main_suite.create_snapshot()
 
-        comparison = ComparisonNew(
+        comparison = Comparison(
             self.base_image_source, self.current_image_source, dir=os.path.join(self.dir, "post_dir"))
 
         os.environ["SMOKEVIEW_OBJECT_DEFS"] = "/home/jake/smv-master/Build/smokeview/gnu_linux_64/objects.svo"
@@ -565,9 +351,9 @@ class SmokebotPy:
         comparison.run()
         comparisons = comparison.compare_images()
 
-        # for diff in comparisons:
-        #     print(diff["base"], diff["current"],
-        #           diff["comparison"], diff["diff"])
+        for diff in comparisons:
+            print(diff["base"], diff["current"],
+                  diff["comparison"], diff["diff"])
 
 
 if __name__ == "__main__":
@@ -579,13 +365,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     smoke_bot = SmokebotPy(force=args.force)
-    smoke_bot.current_image_source.add_cases(
-        "../../../smv/Verification/scripts/cases.json")
-    # smoke_bot.base_smv = SmvProgramRepo(
-    #     os.path.join(smoke_bot.dir, "builds/base"))
-    # smoke_bot.current_smv = SmvProgramRepo(
-    #     os.path.join(smoke_bot.dir, "builds/current"), url="https://github.com/JakeOShannessy/smv.git", branch="read-object-no-global")
 
-    # print(smoke_bot.base_smv.path)
-    # print(smoke_bot.current_smv.path)
+    # Run images by building from source, the default is the NIST HEAD
+    smoke_bot.base_image_source = RunImages()
+    smoke_bot.base_image_source.add_cases(
+        "../../../smv/Verification/scripts/cases.json")
+
+    # Run images by building from source from a particular branch
+    smoke_bot.base_image_source = RunImages()
+    smoke_bot.current_image_source.src.repo_url = "https://github.com/JakeOShannessy/smv.git"
+    smoke_bot.current_image_source.src.branch = "read-smoke-no-global"
+    smoke_bot.base_image_source.add_cases(
+        "../../../smv/Verification/scripts/cases.json")
+
     smoke_bot.run()
