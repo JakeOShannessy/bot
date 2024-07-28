@@ -30,6 +30,7 @@ class Suite:
         # TODO: split this into a generic executor class that could use SLURM
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
         self.dir = dir
+        os.makedirs(self.dir, exist_ok=True)
 
     def run_case(self, case):
         """Run a given case"""
@@ -116,56 +117,70 @@ class SmvProgramRepo:
 class ReferenceImagesZip:
     def __init__(self, url="https://github.com/firemodels/fig/archive/dfcabce0508b79a60d4ea6a9699cf8532cdd02c2.zip", sub_dir="fig-dfcabce0508b79a60d4ea6a9699cf8532cdd02c2/smv/Reference_Figures/Default", dir="image_source"):
         self.dir = dir
-        self.unpacked_dir = os.path.join(self.dir, "unpacked")
         self.sub_dir = sub_dir
-        self.images_dir = os.path.join(self.dir, "images")
-        self.zip_path = os.path.join(self.dir, "images.zip")
         self.url = url
+
+    def __unpacked_dir(self):
+        return os.path.join(self.dir, "unpacked")
+
+    def __images_dir(self):
+        return os.path.join(self.dir, "images")
+
+    def __zip_path(self):
+        return os.path.join(self.dir, "images.zip")
 
     def run(self):
         os.makedirs(self.dir, exist_ok=True)
-        (path, message) = urllib.request.urlretrieve(self.url, self.zip_path)
-        os.makedirs(self.images_dir, exist_ok=True)
-        os.makedirs(self.unpacked_dir, exist_ok=True)
-        shutil.unpack_archive(path, self.unpacked_dir)
-        shutil.rmtree(self.images_dir)
-        shutil.copytree(os.path.join(self.unpacked_dir,
-                        self.sub_dir), self.images_dir)
+        (path, message) = urllib.request.urlretrieve(self.url, self.__zip_path())
+        os.makedirs(self.__images_dir(), exist_ok=True)
+        os.makedirs(self.__unpacked_dir(), exist_ok=True)
+        shutil.unpack_archive(path, self.__unpacked_dir())
+        shutil.rmtree(self.__images_dir())
+        shutil.copytree(os.path.join(self.__unpacked_dir(),
+                        self.sub_dir), self.__images_dir())
 
     def image_paths(self):
         paths = glob.glob('./**/*.png', recursive=True,
-                          root_dir=self.images_dir)
+                          root_dir=self.__images_dir())
         added_paths = []
         for path in paths:
-            added_paths.append(os.path.join(self.images_dir, path))
+            added_paths.append(os.path.join(self.__images_dir(), path))
         return added_paths
 
 
 class RunImages:
     def __init__(self, cases: list[Case] = [], src=None, dir="image_source"):
-        self.root = dir
+        self.dir = dir
         if not src:
-            self.src = SmvProgramRepo(os.path.join(self.root, "run"))
+            self.src = SmvProgramRepo(os.path.join(self.dir, "run"))
         else:
             self.src = src
         self.cases = cases
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)
         self.dirs = ["SMV_Summary", "SMV_User_Guide",
                      "SMV_Verification_Guide"]
-        self.snapshot_path = os.path.join(self.root, "snapshot.zip")
-        self.sims_dir = os.path.join(self.root, "sims")
-        self.images_dir = os.path.join(self.root)
+
+    def __snapshot_path(self):
+        if self.override_snapshot:
+            return self.override_snapshot
+        return os.path.join(self.dir, "snapshot.zip")
+
+    def __sims_dir(self):
+        return os.path.join(self.dir, "sims")
+
+    def __images_dir(self):
+        return os.path.join(self.dir)
 
     def run(self):
-        base_sims_dir = self.sims_dir
-        base_images_dir = self.images_dir
+        base_sims_dir = self.__sims_dir()
+        base_images_dir = self.__images_dir()
         os.makedirs(base_sims_dir, exist_ok=True)
         for dir in self.dirs:
             os.makedirs(os.path.join(base_images_dir, "Manuals", dir,
                         "SCRIPT_FIGURES"), exist_ok=True)
         # TODO: check that snapshot exists
-        print("unpacking", self.snapshot_path, base_sims_dir)
-        shutil.unpack_archive(self.snapshot_path, base_sims_dir)
+        print("unpacking", self.__snapshot_path(), base_sims_dir)
+        shutil.unpack_archive(self.__snapshot_path(), base_sims_dir)
         self.run_scripts(base_sims_dir, self.src)
 
     def run_script(self, dir: str, case: Case, smv):
@@ -204,12 +219,12 @@ class RunImages:
         return list(self.executor.map(self.run_script, itertools.repeat(dir), self.cases, itertools.repeat(src)))
 
     def image_paths(self):
-        print("globbing", self.images_dir)
+        print("globbing", self.__images_dir())
         paths = glob.glob('./**/*.png', recursive=True,
-                          root_dir=self.images_dir)
+                          root_dir=self.__images_dir())
         added_paths = []
         for path in paths:
-            added_paths.append(os.path.join(self.images_dir, path))
+            added_paths.append(os.path.join(self.__images_dir(), path))
         return added_paths
 
     def add_cases(self, cases):
@@ -332,8 +347,26 @@ class SmokebotPy:
             # The default current image source is to clone and build from git
             self.current_image_source = RunImages()
 
-        self.base_image_source.dir = os.path.join(self.dir, "images_a")
-        self.current_image_source.dir = os.path.join(self.dir, "images_b")
+        self.__base_image_source.dir = os.path.join(self.dir, "images_a")
+        self.__current_image_source.dir = os.path.join(self.dir, "images_b")
+
+    def get_base_image_source(self):
+        return self.__base_image_source
+
+    def get_current_image_source(self):
+        return self.__current_image_source
+
+    def set_base_image_source(self, src):
+        self.__base_image_source = src
+        self.__base_image_source.dir = os.path.join(self.dir, "images_a")
+
+    def set_current_image_source(self, src):
+        self.__current_image_source = src
+        self.__current_image_source.dir = os.path.join(self.dir, "images_b")
+
+    base_image_source = property(get_base_image_source, set_base_image_source)
+    current_image_source = property(
+        get_current_image_source, set_current_image_source)
 
     def run(self):
         main_suite = Suite(self.cases, dir=os.path.join(
@@ -342,7 +375,6 @@ class SmokebotPy:
         if self.force or not os.path.isfile(main_suite.snapshot_path()):
             main_suite.run()
             main_suite.create_snapshot()
-
         comparison = Comparison(
             self.base_image_source, self.current_image_source, dir=os.path.join(self.dir, "post_dir"))
 
@@ -366,16 +398,17 @@ if __name__ == "__main__":
 
     smoke_bot = SmokebotPy(force=args.force)
 
-    # Run images by building from source, the default is the NIST HEAD
-    smoke_bot.base_image_source = RunImages()
-    smoke_bot.base_image_source.add_cases(
-        "../../../smv/Verification/scripts/cases.json")
+    # # Run images by building from source, the default is the NIST HEAD
+    # smoke_bot.base_image_source = RunImages()
+    # smoke_bot.base_image_source.add_cases(
+    #     "../../../smv/Verification/scripts/cases.json")
 
     # Run images by building from source from a particular branch
-    smoke_bot.base_image_source = RunImages()
-    smoke_bot.current_image_source.src.repo_url = "https://github.com/JakeOShannessy/smv.git"
-    smoke_bot.current_image_source.src.branch = "read-smoke-no-global"
-    smoke_bot.base_image_source.add_cases(
+    smoke_bot.current_image_source = RunImages()
+    # smoke_bot.current_image_source.src.repo_url = "https://github.com/JakeOShannessy/smv.git"
+    # smoke_bot.current_image_source.src.branch = "read-smoke-no-global"
+    smoke_bot.current_image_source.add_cases(
         "../../../smv/Verification/scripts/cases.json")
+    smoke_bot.current_image_source.override_snapshot = "../snapshot.zip"
 
     smoke_bot.run()
