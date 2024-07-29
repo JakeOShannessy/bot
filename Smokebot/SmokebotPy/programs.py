@@ -62,8 +62,7 @@ def run_cmake(path, build_path):
 
 
 def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
-    print("running", filename)
-    print("object_path", os.path.abspath(objpath))
+    # print("running", filename)
     env = None
     if objpath:
         env = os.environ.copy()
@@ -71,11 +70,8 @@ def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
     args = [os.path.abspath(smv_path), "-runscript", filename]
     result = subprocess.run(args, shell=False,
                             capture_output=True, text=True, cwd=directory, env=env)
-    if result.returncode != 0:
-        print(result.stdout)
-        print(result.stderr)
-        raise Exception(f'smokeview failed: case: {filename}')
     print("completed", filename)
+    return result
 
 
 cmp_regex = re.compile('[^\\(]*\\((.*)\\)')

@@ -15,6 +15,18 @@ import platform
 p = '~/smv/Verification'
 
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 def create_case_dir_name(path):
     return os.path.basename(path) + '.d'
 
@@ -161,7 +173,7 @@ class RunImages:
         else:
             self.src = src
         self.cases = cases
-        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         self.dirs = ["SMV_Summary", "SMV_User_Guide",
                      "SMV_Verification_Guide"]
         self.override_snapshot = None
@@ -178,6 +190,7 @@ class RunImages:
         return os.path.join(self.dir)
 
     def run(self):
+        self.src.setup()
         base_sims_dir = self.__sims_dir()
         base_images_dir = self.__images_dir()
         os.makedirs(base_sims_dir, exist_ok=True)
@@ -187,14 +200,12 @@ class RunImages:
         # TODO: check that snapshot exists
         print("unpacking", self.__snapshot_path(), base_sims_dir)
         shutil.unpack_archive(self.__snapshot_path(), base_sims_dir)
-        self.run_scripts(base_sims_dir, self.src)
+        return self.run_scripts(base_sims_dir, self.src)
 
     def run_script(self, dir: str, case: Case, smv):
         """Run a particular script"""
-        print("run", case.path, "with", smv.path, "in", dir)
         # TODO: this is a bit of hack
         ini_root = os.path.dirname(case.script_path())
-        # print("ini_root", ini_root)
         ini_files = glob.glob('./**/*.ini', recursive=True,
                               root_dir=ini_root)
         jpeg_files = glob.glob('./**/*.jpg', recursive=True,
@@ -219,13 +230,16 @@ class RunImages:
                 os.remove(stop_path(dest_script_path))
             result = programs.run_smv_script(
                 case_rundir, fds_prefix + ".smv", smv_path=smv.path, objpath=smv.objpath)
+            with open(os.path.join(case_rundir, fds_prefix + ".stdout"), 'w') as f:
+                f.write(result.stdout)
+            with open(os.path.join(case_rundir, fds_prefix + ".stderr"), 'w') as f:
+                f.write(result.stderr)
+            return (case.script_name(), result)
 
     def run_scripts(self, dir, src):
-        print("running scripts", dir, src.path)
         return list(self.executor.map(self.run_script, itertools.repeat(dir), self.cases, itertools.repeat(src)))
 
     def image_paths(self):
-        print("globbing", self.__images_dir())
         paths = glob.glob('./**/*.png', recursive=True,
                           root_dir=self.__images_dir())
         added_paths = []
@@ -259,49 +273,19 @@ class Comparison:
         return os.path.join(self.root, "comparison")
 
     def run_base(self):
-        self.image_source_a.run()
+        return self.image_source_a.run()
 
     def run_current(self):
-        self.image_source_b.run()
+        return self.image_source_b.run()
 
     def run(self):
         """Run the deafult script for all cases"""
-        self.run_base()
-        self.run_current()
-
-    def run_script(self, dir, case, smv):
-        """Run a particular script"""
-        print("run", case.path, "with", smv, "in", dir)
-        # TODO: this is a bit of hack
-        ini_root = os.path.join(p, "Visualization")
-        ini_files = glob.glob('./**/*.ini', recursive=True,
-                              root_dir=ini_root)
-        jpeg_files = glob.glob('./**/*.jpg', recursive=True,
-                               root_dir=ini_root)
-        png_files = glob.glob('./**/*.png', recursive=True,
-                              root_dir=ini_root)
-        case_rundir = os.path.join(
-            dir, create_case_dir_name(case.path))
-        source_script_path = case.script_path()
-        (fds_prefix, _) = os.path.splitext(
-            os.path.basename(case.path))
-        # Copy script file to that dir
-        if os.path.isfile(source_script_path):
-            dest_script_path = os.path.join(
-                case_rundir, case.script_name())
-            shutil.copyfile(source_script_path, dest_script_path)
-            for file in (ini_files+jpeg_files+png_files):
-                src_path = os.path.join(ini_root, file)
-                dest_path = os.path.join(
-                    case_rundir, os.path.basename(file))
-                shutil.copyfile(src_path, dest_path)
-            if os.path.isfile(stop_path(dest_script_path)):
-                os.remove(stop_path(dest_script_path))
-            programs.run_smv_script(
-                case_rundir, fds_prefix + ".smv", smv_path=smv.path)
-
-    def run_scripts(self, dir, smv):
-        return list(self.executor.map(self.run_script, itertools.repeat(dir), self.cases, itertools.repeat(smv)))
+        base_results = self.run_base()
+        current_results = self.run_current()
+        return {
+            "base": base_results,
+            "current": current_results,
+        }
 
     def compare_image(self, file, files_b):
         """Give a filename, compare the base and current"""
@@ -313,15 +297,13 @@ class Comparison:
                 break
         comparison_path = None
         if not current_file:
-            print("  no current_file", file, current_file)
+            print("no current_file for", os.path.basename(file))
         if current_file and os.path.isfile(current_file):
             comparison_path = os.path.join(
                 self.__comparison_path(), os.path.basename(file))
-            print("comparing", os.path.basename(file),
-                  os.path.basename(current_file))
+            print("comparing", os.path.basename(file))
             diff = programs.compare_images(
                 file,  current_file, comparison_path)
-            # print("diff", diff)
         diff = {
             "base": file,
             "current": current_file,
@@ -377,19 +359,42 @@ class SmokebotPy:
     def run(self):
         main_suite = Suite(self.cases, dir=os.path.join(
             self.dir, "run_dir"))
-        print("snapshot path", main_suite.snapshot_path())
         if self.force or not os.path.isfile(main_suite.snapshot_path()):
             main_suite.run()
             main_suite.create_snapshot()
         comparison = Comparison(
             self.base_image_source, self.current_image_source, dir=os.path.join(self.dir, "post_dir"))
 
-        comparison.run()
+        run_results = comparison.run()
         comparisons = comparison.compare_images()
 
+        if run_results["base"]:
+            print_results(run_results["base"])
+        if run_results["current"]:
+            print_results(run_results["current"])
+        rmse_tolerance = 0.1
         for diff in comparisons:
-            print(diff["base"], diff["current"],
-                  diff["comparison"], diff["diff"])
+            diff_val = diff["diff"]
+            if not diff["comparison"]:
+                continue
+            image_name = os.path.basename(diff["comparison"])
+            if diff_val != None and diff_val < rmse_tolerance:
+                print(image_name,
+                      f"{bcolors.OKGREEN}{diff_val}{bcolors.ENDC}", sep="\t")
+            else:
+                print(image_name,
+                      f"{bcolors.FAIL}{diff_val}{bcolors.ENDC}", sep="\t")
+
+
+def print_results(results):
+    """
+    Prints the result of running smokeview scripts with colored output.
+    """
+    for (scriptname, result) in results:
+        if result.returncode == 0:
+            print(scriptname, f"{bcolors.OKGREEN}OK{bcolors.ENDC}", sep="\t")
+        else:
+            print(scriptname, f"{bcolors.FAIL}FAILED{bcolors.ENDC}", sep="\t")
 
 
 if __name__ == "__main__":
