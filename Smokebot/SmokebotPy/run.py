@@ -404,7 +404,8 @@ if __name__ == "__main__":
     #     "../../../smv/Verification/scripts/cases.json")
 
     # Run images by building from source from a particular branch
-    smoke_bot.current_image_source = RunImages()
+    smoke_bot.current_image_source = RunImages(
+        dir=smoke_bot.current_image_source.dir)
     # smoke_bot.current_image_source.src.repo_url = "https://github.com/JakeOShannessy/smv.git"
     # smoke_bot.current_image_source.src.branch = "read-smoke-no-global"
     smoke_bot.current_image_source.add_cases(
