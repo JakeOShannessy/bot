@@ -2,6 +2,7 @@ import tempfile
 import subprocess
 import os
 import re
+import platform
 
 
 def run(program, directory, filename, processes=None):
@@ -35,22 +36,41 @@ def setup_cmake(path, build_path, release=False):
         args.append("-DCMAKE_BUILD_TYPE=Release")
     else:
         args.append("-DCMAKE_BUILD_TYPE=Debug")
-    subprocess.run(args, shell=False,
-                   capture_output=False, text=True,)
+    if platform.system() == "Windows":
+        args.append("-DVCPKG_TARGET_TRIPLET=x64-windows-static")
+        args.append("-DVCPKG_HOST_TRIPLET=x64-windows-static")
+        args.append(
+            "-DCMAKE_TOOLCHAIN_FILE=C:/Users/josha/Documents/vcpkg/scripts/buildsystems/vcpkg.cmake")
+    print(args)
+    result = subprocess.run(args, shell=False,
+                            capture_output=False, text=True,)
+    if result.returncode != 0:
+        print(result.stdout)
+        print(result.stderr)
+        raise Exception(f'cmake setup failed')
 
 
 def run_cmake(path, build_path):
     print("cmake build for", path)
     args = ["cmake", "--build", build_path]
-    subprocess.run(args, shell=False,
-                   capture_output=False, text=True,)
-
-
-def run_smv_script(directory, filename, smv_path="smokeview"):
-    print("running", filename)
-    args = [os.path.realpath(smv_path), "-runscript", filename]
     result = subprocess.run(args, shell=False,
-                            capture_output=True, text=True, cwd=directory)
+                            capture_output=False, text=True,)
+    if result.returncode != 0:
+        print(result.stdout)
+        print(result.stderr)
+        raise Exception(f'cmake build failed')
+
+
+def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
+    print("running", filename)
+    print("object_path", os.path.abspath(objpath))
+    env = None
+    if objpath:
+        env = os.environ.copy()
+        env["SMOKEVIEW_OBJECT_DEFS"] = os.path.abspath(objpath)
+    args = [os.path.abspath(smv_path), "-runscript", filename]
+    result = subprocess.run(args, shell=False,
+                            capture_output=True, text=True, cwd=directory, env=env)
     if result.returncode != 0:
         print(result.stdout)
         print(result.stderr)

@@ -90,6 +90,11 @@ class SmvProgramRepo:
     def __build_path(self):
         return os.path.join(self.base_path, "build")
 
+    def __object_path(self):
+        return os.path.join(self.__build_path(), "objects.svo")
+
+    objpath = property(__object_path)
+
     def __run_path(self):
         return os.path.join(self.base_path, "run_dir")
 
@@ -159,6 +164,7 @@ class RunImages:
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)
         self.dirs = ["SMV_Summary", "SMV_User_Guide",
                      "SMV_Verification_Guide"]
+        self.override_snapshot = None
 
     def __snapshot_path(self):
         if self.override_snapshot:
@@ -212,7 +218,7 @@ class RunImages:
             if os.path.isfile(stop_path(dest_script_path)):
                 os.remove(stop_path(dest_script_path))
             result = programs.run_smv_script(
-                case_rundir, fds_prefix + ".smv", smv_path=smv.path)
+                case_rundir, fds_prefix + ".smv", smv_path=smv.path, objpath=smv.objpath)
 
     def run_scripts(self, dir, src):
         print("running scripts", dir, src.path)
@@ -378,8 +384,6 @@ class SmokebotPy:
         comparison = Comparison(
             self.base_image_source, self.current_image_source, dir=os.path.join(self.dir, "post_dir"))
 
-        os.environ["SMOKEVIEW_OBJECT_DEFS"] = "/home/jake/smv-master/Build/smokeview/gnu_linux_64/objects.svo"
-
         comparison.run()
         comparisons = comparison.compare_images()
 
@@ -410,6 +414,6 @@ if __name__ == "__main__":
     # smoke_bot.current_image_source.src.branch = "read-smoke-no-global"
     smoke_bot.current_image_source.add_cases(
         "../../../smv/Verification/scripts/cases.json")
-    smoke_bot.current_image_source.override_snapshot = "../snapshot.zip"
+    smoke_bot.current_image_source.override_snapshot = "./snapshot.zip"
 
     smoke_bot.run()
