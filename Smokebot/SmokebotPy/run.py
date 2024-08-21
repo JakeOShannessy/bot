@@ -443,15 +443,15 @@ def print_comparison_results(comparison_results):
             continue
         image_name = os.path.basename(diff["comparison"])
         if diff_val != None and diff_val < rmse_tolerance:
-            ok_comparisons.append((image_name, diff_val))
+            ok_comparisons.append((image_name, diff_val, diff["comparison"]))
         else:
-            bad_comparisons.append((image_name, diff_val))
+            bad_comparisons.append((image_name, diff_val, diff["comparison"]))
     print(
         f"  {bcolors.OKGREEN}{len(ok_comparisons)} comparisons OK{bcolors.ENDC}", sep="\t")
     bad_comparisons.sort(key=lambda x: x[1])
-    for (image_name, diff_val) in bad_comparisons:
+    for (image_name, diff_val,image_path) in bad_comparisons:
         print(f"  {image_name}",
-              f"{bcolors.FAIL}{diff_val}{bcolors.ENDC}", sep="\t")
+              f"{bcolors.FAIL}{diff_val}{bcolors.ENDC}: {image_path}", sep="\t")
     print(
         f"  {bcolors.FAIL}{len(bad_comparisons)} comparisons NOT OK{bcolors.ENDC}", sep="\t")
 
@@ -537,6 +537,8 @@ if __name__ == "__main__":
         "https://github.com/JakeOShannessy/smv.git", "read-tour-no-global")
     runner.add_repo_branch(
         "https://github.com/JakeOShannessy/smv.git", "read-hvac-no-global")
+    runner.add_repo_branch(
+        "https://github.com/JakeOShannessy/smv.git", "meshes-no-global")
     results = runner.run()
     print("base hash:", results["base_hash"])
     for comparison in results["comparisons"]:
