@@ -260,9 +260,11 @@ class RunImages:
             result = programs.run_smv_script(
                 case_rundir, smv_name, smv_path=smv, objpath=os.path.abspath(os.path.join(smv, "../../../repo/Build/for_bundle/objects.svo")))
             if result.returncode == 0:
-                print(f"completed: {smv_name}", f"{bcolors.OKGREEN}OK{bcolors.ENDC}", sep="\t")
+                print(f"completed: {smv_name}",
+                      f"{bcolors.OKGREEN}OK{bcolors.ENDC}", sep="\t")
             else:
-                print(f"completed: {smv_name}", f"{bcolors.FAIL}FAILED{bcolors.ENDC}", sep="\t")
+                print(f"completed: {smv_name}",
+                      f"{bcolors.FAIL}FAILED{bcolors.ENDC}", sep="\t")
             with open(os.path.join(case_rundir, fds_prefix + ".stdout"), 'w') as f:
                 f.write(result.stdout)
             with open(os.path.join(case_rundir, fds_prefix + ".stderr"), 'w') as f:
@@ -422,21 +424,6 @@ def run_images(repo_url: str, branch: str, snapshot_path: str, cases):
     return {"image_paths": ri.image_paths(), "hash": sm_a.hash, "url": sm_a.repo_url, "branch": sm_a.branch}
 
 
-# def get_comparison_results(cases_path: str) -> list[Case]:
-#     """Get cases from a JSON file"""
-#     cases = []
-#     with open(cases_path) as f:
-#         d = json.load(f)
-#         for l in d:
-#             path = l["input_path"]
-#             if not os.path.isabs(path):
-#                 # If the input path is not absolute, resolve it relative to
-#                 # cases_path
-#                 path = os.path.join(os.path.dirname(cases_path), path)
-#             cases.append(
-#                 Case(l["program"], path, processes=l.get("n_processes"), threads=l.get("n_threads")))
-#     return cases
-
 def print_comparison_results(comparison_results):
     rmse_tolerance = 0.1
     # comparisons within tolerance
@@ -463,8 +450,12 @@ def print_comparison_results(comparison_results):
         else:
             print(f"  {image_name}",
                   f"{bcolors.FAIL}{diff_val}{bcolors.ENDC}: {image_path}", sep="\t")
-    print(
-        f"  {bcolors.FAIL}{len(bad_comparisons)} comparisons NOT OK{bcolors.ENDC}", sep="\t")
+    if len(bad_comparisons) > 0:
+        print(
+            f"  {bcolors.FAIL}{len(bad_comparisons)} comparisons NOT OK{bcolors.ENDC}", sep="\t")
+    else:
+        print(
+            f"  {bcolors.OKGREEN}{len(bad_comparisons)} comparisons NOT OK{bcolors.ENDC}", sep="\t")
 
 
 def print_comparison_results_full(comparison_results):
@@ -560,6 +551,7 @@ if __name__ == "__main__":
                             get_cases("../../../smv/Verification/scripts/cases.json"))
     runner.add_repo_branches(
         "https://github.com/JakeOShannessy/smv.git", [
+            "read-smv-no-global",
             "read-tour-no-global",
             "read-hvac-no-global",
             "meshes-no-global",
