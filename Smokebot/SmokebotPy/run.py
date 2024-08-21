@@ -553,6 +553,7 @@ if __name__ == "__main__":
         "https://github.com/JakeOShannessy/smv.git", [
             "read-smv-no-global",
             "read-tour-no-global",
+            "read-tour-no-global-2",
             "read-hvac-no-global",
             "meshes-no-global",
             "read-colorbar-no-global",
