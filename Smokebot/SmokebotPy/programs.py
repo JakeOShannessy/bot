@@ -92,7 +92,9 @@ def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
     args = [os.path.abspath(smv_path), "-runscript", filename]
     result = subprocess.run(args, shell=False,
                             capture_output=True, text=True, cwd=directory, env=env)
-    print("completed", filename)
+    if result.returncode != 0:
+        print("stderr:",result.stderr)
+        print("stdour:",result.stdout)
     return result
 
 

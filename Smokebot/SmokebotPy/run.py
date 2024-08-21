@@ -256,8 +256,13 @@ class RunImages:
                 shutil.copyfile(src_path, dest_path)
             if os.path.isfile(stop_path(dest_script_path)):
                 os.remove(stop_path(dest_script_path))
+            smv_name = fds_prefix + ".smv"
             result = programs.run_smv_script(
-                case_rundir, fds_prefix + ".smv", smv_path=smv, objpath=os.path.abspath(os.path.join(smv, "../../../repo/Build/for_bundle/objects.svo")))
+                case_rundir, smv_name, smv_path=smv, objpath=os.path.abspath(os.path.join(smv, "../../../repo/Build/for_bundle/objects.svo")))
+            if result.returncode == 0:
+                print(f"completed: {smv_name}", f"{bcolors.OKGREEN}OK{bcolors.ENDC}", sep="\t")
+            else:
+                print(f"completed: {smv_name}", f"{bcolors.FAIL}FAILED{bcolors.ENDC}", sep="\t")
             with open(os.path.join(case_rundir, fds_prefix + ".stdout"), 'w') as f:
                 f.write(result.stdout)
             with open(os.path.join(case_rundir, fds_prefix + ".stderr"), 'w') as f:
@@ -440,6 +445,8 @@ def print_comparison_results(comparison_results):
     for diff in comparison_results:
         diff_val = diff["diff"]
         if not diff["comparison"]:
+            bad_comparisons.append(
+                (os.path.basename(diff["base"]), None, None))
             continue
         image_name = os.path.basename(diff["comparison"])
         if diff_val != None and diff_val < rmse_tolerance:
@@ -448,10 +455,14 @@ def print_comparison_results(comparison_results):
             bad_comparisons.append((image_name, diff_val, diff["comparison"]))
     print(
         f"  {bcolors.OKGREEN}{len(ok_comparisons)} comparisons OK{bcolors.ENDC}", sep="\t")
-    bad_comparisons.sort(key=lambda x: x[1])
+    # bad_comparisons.sort(key=lambda x: x[1])
     for (image_name, diff_val, image_path) in bad_comparisons:
-        print(f"  {image_name}",
-              f"{bcolors.FAIL}{diff_val}{bcolors.ENDC}: {image_path}", sep="\t")
+        if diff_val == None:
+            print(f"  {image_name}",
+                  f"{bcolors.FAIL}NO CURRENT IMAGE{bcolors.ENDC}", sep="\t")
+        else:
+            print(f"  {image_name}",
+                  f"{bcolors.FAIL}{diff_val}{bcolors.ENDC}: {image_path}", sep="\t")
     print(
         f"  {bcolors.FAIL}{len(bad_comparisons)} comparisons NOT OK{bcolors.ENDC}", sep="\t")
 
@@ -486,10 +497,15 @@ class ManyComparison:
             "branch": branch,
         })
 
+    def add_repo_branches(self, repo_url, branches):
+        for branch in branches:
+            self.add_repo_branch(repo_url, branch)
+
     def run(self):
         images_base = run_images(self.base_url,
                                  self.base_branch, self.snapshot_path, self.cases)
         images_others = []
+        # TODO: do these in concurrently
         for repo in self.comparison_sources:
             try:
                 images_b = run_images(repo["url"],
@@ -504,7 +520,6 @@ class ManyComparison:
             "comparisons": []
         }
         for other in images_others:
-            print(other)
             if "error" in other and other["error"]:
                 full_results["comparisons"].append(
                     {"error": other["error"],  "url": other["url"], "branch": other["branch"]})
@@ -543,14 +558,17 @@ if __name__ == "__main__":
     runner = ManyComparison("https://github.com/firemodels/smv.git",
                             "master",
                             get_cases("../../../smv/Verification/scripts/cases.json"))
-    runner.add_repo_branch(
-        "https://github.com/JakeOShannessy/smv.git", "read-tour-no-global")
-    runner.add_repo_branch(
-        "https://github.com/JakeOShannessy/smv.git", "read-hvac-no-global")
-    runner.add_repo_branch(
-        "https://github.com/JakeOShannessy/smv.git", "meshes-no-global")
-    runner.add_repo_branch(
-        "https://github.com/JakeOShannessy/smv.git", "read-colorbar-no-global")
+    runner.add_repo_branches(
+        "https://github.com/JakeOShannessy/smv.git", [
+            "read-tour-no-global",
+            "read-hvac-no-global",
+            "meshes-no-global",
+            "read-colorbar-no-global",
+            "read-smoke-no-global",
+            "read-slice-no-global",
+            "read-label-no-global",
+            "read-part-no-global",
+        ])
     results = runner.run()
     print("base hash:", results["base_hash"])
     for comparison in results["comparisons"]:
