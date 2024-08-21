@@ -1316,22 +1316,26 @@ email_build_status()
   echo $THIS_FDS_FAILED>$FDS_STATUS_FILE
   stop_time=`date`
   if [ "$COMPILER" == "intel" ]; then
-    IFORT_VERSION=`ifort -v 2>&1`
+    icx -v >& compiler_version.out
+    ICC_VERSION=`cat compiler_version.out | head -1`
+    rm compiler_version.out
   else
-    IFORT_VERSION=`gfortran --version | head -1`
+    ICC_VERSION=`gcc --version | head -1`
   fi
   echo "----------------------------------------------"      > $TIME_LOG
-  echo "host/OS: $hostname/$platform2"                      >> $TIME_LOG
+  echo "host: $hostname"                                    >> $TIME_LOG
+  echo "OS: $platform2"                                     >> $TIME_LOG
   echo "repo: $repo"                                        >> $TIME_LOG
-  echo "queue: $QUEUE"                             >> $TIME_LOG
+  echo "queue: $QUEUE"                                      >> $TIME_LOG
+  if [ "$ICC_VERSION" != "" ]; then
+    echo "C/C++: $ICC_VERSION "                             >> $TIME_LOG
+  fi
+  echo ""                                                   >> $TIME_LOG
   echo "$BOT_REVISION/$BOTBRANCH"                           >> $TIME_LOG
   echo "$CFAST_REVISION/$CFASTBRANCH"                       >> $TIME_LOG
   echo "$FDS_REVISION/$FDSBRANCH"                           >> $TIME_LOG
   echo "$FIG_REVISION/$FIGBRANCH"                           >> $TIME_LOG
   echo "$SMV_REVISION/$SMVBRANCH"                           >> $TIME_LOG
-  if [ "$IFORT_VERSION" != "" ]; then
-    echo "Fortran: $IFORT_VERSION "                         >> $TIME_LOG
-  fi
   echo ""                                                   >> $TIME_LOG
   echo "start time: $start_time "                           >> $TIME_LOG
   echo "stop time: $stop_time "                             >> $TIME_LOG
@@ -1563,6 +1567,8 @@ GITURL=
 CACHE_DIR=
 DONOT_RUN_BENCHMARK=
 HAVEMAIL=`which mail |& grep -v 'no mail'`
+MPI_TYPE=impi
+INTEL2="-J"
 
 #*** save pid so -k option (kill smokebot) may be used lateer
 
@@ -1570,7 +1576,7 @@ echo $$ > $PID_FILE
 
 #*** parse command line options
 
-while getopts 'aAb:cCDJm:Mq:QR:s:StuUw:W:x:X:y:Y:' OPTION
+while getopts 'aAb:cCDm:Mq:QR:s:StuUw:W:x:X:y:Y:' OPTION
 do
 case $OPTION in
   a)
@@ -1597,11 +1603,8 @@ case $OPTION in
   D)
    COMPILER=gnu
    MPI_TYPE=ompi
+   INTEL2=
    export OMP_NUM_THREADS=1
-   ;;
-  J)
-   MPI_TYPE=impi
-   INTEL2="-J"
    ;;
   m)
    mailTo="$OPTARG"
@@ -1860,9 +1863,6 @@ else
   WEB_URL=
 fi
 
-if [[ "$IFORT_COMPILER" != "" ]] ; then
-  source $IFORT_COMPILER/bin/compilervars.sh intel64
-fi 
 if [ "$COMPILER" == "gnu" ]; then
   notfound=`gcc -help 2>&1 | tail -1 | grep "not found" | wc -l`
 else
