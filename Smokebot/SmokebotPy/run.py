@@ -449,7 +449,7 @@ def print_comparison_results(comparison_results):
     print(
         f"  {bcolors.OKGREEN}{len(ok_comparisons)} comparisons OK{bcolors.ENDC}", sep="\t")
     bad_comparisons.sort(key=lambda x: x[1])
-    for (image_name, diff_val,image_path) in bad_comparisons:
+    for (image_name, diff_val, image_path) in bad_comparisons:
         print(f"  {image_name}",
               f"{bcolors.FAIL}{diff_val}{bcolors.ENDC}: {image_path}", sep="\t")
     print(
@@ -491,30 +491,40 @@ class ManyComparison:
                                  self.base_branch, self.snapshot_path, self.cases)
         images_others = []
         for repo in self.comparison_sources:
-            images_b = run_images(repo["url"],
-                                  repo["branch"], self.snapshot_path, self.cases)
-            images_others.append(images_b)
+            try:
+                images_b = run_images(repo["url"],
+                                      repo["branch"], self.snapshot_path, self.cases)
+                images_others.append(images_b)
+            except:
+                images_others.append(
+                    {"error": True, "url": repo["url"], "branch": repo["branch"]})
+
         full_results = {
             "base_hash": images_base["hash"],
             "comparisons": []
         }
         for other in images_others:
-            compare_dir = f"{images_base["hash"]}-{other["hash"]}"
-            results_summary_path = os.path.join(
-                default_root_path, "compare", compare_dir, "results.json")
-            comparison_results = None
-            if os.path.exists(results_summary_path):
-                with open(results_summary_path) as f:
-                    d = json.load(f)
-                    comparison_results = d
+            print(other)
+            if "error" in other and other["error"]:
+                full_results["comparisons"].append(
+                    {"error": other["error"],  "url": other["url"], "branch": other["branch"]})
             else:
-                comparison = Comparison(
-                    images_base["image_paths"], other["image_paths"], dir=os.path.join(default_root_path, "compare", compare_dir, "images"))
-                comparison_results = comparison.compare_images()
-            full_results["comparisons"].append(
-                {"hash": other["hash"], "results": comparison_results, "url": other["url"], "branch": other["branch"]})
-            with open(results_summary_path, "w") as fp:
-                json.dump(comparison_results, fp, indent=2)
+                compare_dir = f"{images_base["hash"]}-{other["hash"]}"
+                results_summary_path = os.path.join(
+                    default_root_path, "compare", compare_dir, "results.json")
+                comparison_results = None
+                if os.path.exists(results_summary_path):
+                    with open(results_summary_path) as f:
+                        d = json.load(f)
+                        comparison_results = d
+                else:
+                    comparison = Comparison(
+                        images_base["image_paths"], other["image_paths"], dir=os.path.join(default_root_path, "compare", compare_dir, "images"))
+                    comparison_results = comparison.compare_images()
+                full_results["comparisons"].append(
+                    {"hash": other["hash"], "results": comparison_results, "url": other["url"], "branch": other["branch"]})
+                with open(results_summary_path, "w") as fp:
+                    json.dump(comparison_results, fp, indent=2)
         with open(os.path.join(default_root_path, "full_results.json"), "w") as fp:
             json.dump(full_results, fp, indent=2)
         return full_results
@@ -539,8 +549,13 @@ if __name__ == "__main__":
         "https://github.com/JakeOShannessy/smv.git", "read-hvac-no-global")
     runner.add_repo_branch(
         "https://github.com/JakeOShannessy/smv.git", "meshes-no-global")
+    runner.add_repo_branch(
+        "https://github.com/JakeOShannessy/smv.git", "read-colorbar-no-global")
     results = runner.run()
     print("base hash:", results["base_hash"])
     for comparison in results["comparisons"]:
-        print(f"{bcolors.OKCYAN}{comparison["url"]} {comparison["branch"]} {comparison["hash"]}:{bcolors.ENDC}")
-        print_comparison_results(comparison["results"])
+        print(f"{bcolors.OKCYAN}{comparison["url"]} {comparison["branch"]} {comparison["hash"] if "hash" in comparison else ""}:{bcolors.ENDC}")
+        if "error" in comparison and comparison["error"]:
+            print(f"  {bcolors.FAIL}BUILD FAILED{bcolors.ENDC}")
+        else:
+            print_comparison_results(comparison["results"])
