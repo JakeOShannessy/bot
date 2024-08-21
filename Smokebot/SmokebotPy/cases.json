@@ -1,0 +1,324 @@
+[
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/boundtest.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/cell_test.fds",
+        "light": true
+    },
+    {
+        "program": "cfast",
+        "category": "visualization",
+        "input_path": "../Visualization/cfast_test.in"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/colorbar.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/colorbar2.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/colorconv.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/color_geom.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/fed_test.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/hvac_comp.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/mplume5c8.fds",
+        "n_processes": 8,
+        "n_threads": 8
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/objects_dynamic.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/objects_elem.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/objects_static.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/part_color.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/plume5c.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/plume5cdelta.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/plumeiso.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/plume_average.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/plumeiso8.fds",
+        "n_processes": 8
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/plume5c_bounddef.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/script_test.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/script_slice_test.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/sillytexture.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/slicemask.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smoke_sensor.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smoke_test.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smoke_test2.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smoke_test3.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smoke1.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smoke2.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smokex010.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smokex020.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smokex040.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smokex080.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smokex160.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/smoke_test_geom.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/sprinkler_many.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/sphere_propaneu.fds",
+        "n_processes": 6
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/sphere_propanec.fds",
+        "n_processes": 6
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/testsort.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/thouse5.fds",
+        "n_processes": 2,
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/thouse5delta.fds",
+        "n_processes": 2
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/tour.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/transparency.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/vcirctest.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/vcirctest2.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/vectorskipx.fds",
+        "n_processes": 3
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/vectorskipy.fds",
+        "n_processes": 3
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/vectorskipz.fds",
+        "n_processes": 3
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/version.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/version2.fds"
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
+        "input_path": "../Visualization/windrose.fds"
+    },
+    {
+        "program": "fds",
+        "category": "wui",
+        "input_path": "../WUI/hill_structure.fds",
+        "n_processes": 2
+    },
+    {
+        "program": "fds",
+        "category": "wui",
+        "input_path": "../WUI/levelset2.fds",
+        "n_processes": 18
+    },
+    {
+        "program": "fds",
+        "category": "wui",
+        "input_path": "../WUI/pine_tree.fds",
+        "n_processes": 4
+    },
+    {
+        "program": "fds",
+        "category": "wui",
+        "input_path": "../WUI/tree_test2.fds"
+    },
+    {
+        "program": "fds",
+        "category": "wui",
+        "input_path": "../WUI/wind_test1.fds"
+    },
+    {
+        "program": "fds",
+        "category": "wui",
+        "input_path": "../WUI/wind_test2.fds",
+        "n_processes": 2
+    }
+]

@@ -548,7 +548,7 @@ if __name__ == "__main__":
 
     runner = ManyComparison("https://github.com/firemodels/smv.git",
                             "master",
-                            get_cases("../../../smv/Verification/scripts/cases.json"))
+                            get_cases("./cases.json"))
     runner.add_repo_branches(
         "https://github.com/JakeOShannessy/smv.git", [
             "read-smv-no-global",
