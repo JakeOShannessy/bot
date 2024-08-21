@@ -242,8 +242,6 @@ class RunImages:
                               root_dir=ini_root)
         case_rundir = os.path.join(
             dir, create_case_dir_name(case.path))
-        # script path is relative to a repo
-        print("running script:", case.script_path())
         (fds_prefix, _) = os.path.splitext(
             os.path.basename(case.path))
         # Copy script file to that dir
