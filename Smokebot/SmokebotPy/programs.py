@@ -28,6 +28,15 @@ def git_clone(url, path, branch):
                    capture_output=False, text=True,)
 
 
+def git_get_hash(url, branch) -> str:
+    args = ["git", "ls-remote", url]
+    if branch:
+        args += ["--branch", branch]
+    out = subprocess.run(args, shell=False,
+                         capture_output=True, text=True)
+    return out.stdout.split()[0]
+
+
 def setup_cmake(path, build_path, release=False):
     print("cmake setup for", path)
     os.makedirs(build_path, exist_ok=True)
@@ -61,8 +70,21 @@ def run_cmake(path, build_path):
         raise Exception(f'cmake build failed')
 
 
+def install_cmake(build_path, install_prefix,release=False):
+    args = ["cmake", "--install", build_path, "--prefix", install_prefix]
+    if release:
+        args += ["--config", "Release"]
+    else:
+        args += ["--config", "Debug"]
+    result = subprocess.run(args, shell=False,
+                            capture_output=False, text=True,)
+    if result.returncode != 0:
+        print(result.stdout)
+        print(result.stderr)
+        raise Exception(f'cmake install failed')
+
+
 def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
-    # print("running", filename)
     env = None
     if objpath:
         env = os.environ.copy()
