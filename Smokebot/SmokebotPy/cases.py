@@ -1,6 +1,7 @@
 import json
 import os
 
+
 class Case:
     def __init__(self, program: str, path: str, processes=None, threads=None):
         self.program = program
@@ -20,6 +21,10 @@ class Case:
 
     def ini_path(self) -> str:
         return self.__ext_path(".ini")
+
+    def adjusted(self, path):
+        adjusted_path = os.path.join(path,self.path)
+        return Case(self.program, adjusted_path, self.processes, self.threads)
 
 
 def get_cases(cases_path: str) -> list[Case]:

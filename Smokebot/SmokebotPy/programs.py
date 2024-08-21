@@ -95,6 +95,11 @@ def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
     if result.returncode != 0:
         print("stderr:",result.stderr)
         print("stdour:",result.stdout)
+    fdsprefix = os.path.splitext(os.path.basename(filename))[1]
+    with open(f"{os.path.join(directory,fdsprefix)}.stderr", 'w') as f:
+        f.write(result.stderr)
+    with open(f"{os.path.join(directory,fdsprefix)}.stdour", 'w') as f:
+        f.write(result.stdout)
     return result
 
 

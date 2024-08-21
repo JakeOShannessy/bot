@@ -99,7 +99,7 @@ class SmvProgramRepo:
         self.release = False
         self.force = False
 
-    def __repo_path(self):
+    def repo_path(self):
         return os.path.join(self.base_path, "repo")
 
     def __build_path(self):
@@ -126,10 +126,10 @@ class SmvProgramRepo:
         return os.path.join(self.base_path, "run_dir")
 
     def setup(self):
-        programs.git_clone(self.repo_url, self.__repo_path(), self.branch)
-        programs.setup_cmake(self.__repo_path(),
+        programs.git_clone(self.repo_url, self.repo_path(), self.branch)
+        programs.setup_cmake(self.repo_path(),
                              self.__build_path(), release=self.release)
-        programs.run_cmake(self.__repo_path(), self.__build_path())
+        programs.run_cmake(self.repo_path(), self.__build_path())
         programs.install_cmake(self.__build_path(),
                                self.__install_path(), release=self.release)
 
@@ -242,6 +242,8 @@ class RunImages:
                               root_dir=ini_root)
         case_rundir = os.path.join(
             dir, create_case_dir_name(case.path))
+        # script path is relative to a repo
+        print("running script:", case.script_path())
         (fds_prefix, _) = os.path.splitext(
             os.path.basename(case.path))
         # Copy script file to that dir
@@ -417,7 +419,10 @@ def run_images(repo_url: str, branch: str, snapshot_path: str, cases):
     """
     sm_a = SmvProgramRepo(
         url=repo_url, branch=branch)
-    ri = RunImages(cases,
+    adjusted_cases = []
+    for case in cases:
+        adjusted_cases.append(case.adjusted(sm_a.repo_path()))
+    ri = RunImages(adjusted_cases,
                    src=sm_a.path, dir=sm_a.base_path)
     ri.override_snapshot = snapshot_path
     ri.run()
