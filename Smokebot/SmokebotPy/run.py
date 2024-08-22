@@ -558,6 +558,7 @@ if __name__ == "__main__":
             "read-tour-no-global",
             "read-tour-no-global-2",
             "read-hvac-no-global",
+            "read-hvac-no-global-2",
             "meshes-no-global",
             "read-colorbar-no-global",
             "read-smoke-no-global",
