@@ -260,11 +260,11 @@ class RunImages:
             result = programs.run_smv_script(
                 case_rundir, smv_name, smv_path=smv, objpath=os.path.abspath(os.path.join(smv, "../../../repo/Build/for_bundle/objects.svo")))
             if result.returncode == 0:
-                print(f"completed: {smv_name}",
-                      f"{bcolors.OKGREEN}OK{bcolors.ENDC}", sep="\t")
+                print(f"{bcolors.OKGREEN}OK{bcolors.ENDC}",
+                      f"completed: {smv_name}", sep="\t")
             else:
-                print(f"completed: {smv_name}",
-                      f"{bcolors.FAIL}FAILED{bcolors.ENDC}", sep="\t")
+                print(f"{bcolors.FAIL}FAILED{bcolors.ENDC}",
+                      f"completed: {smv_name}", sep="\t")
             with open(os.path.join(case_rundir, fds_prefix + ".stdout"), 'w') as f:
                 f.write(result.stdout)
             with open(os.path.join(case_rundir, fds_prefix + ".stderr"), 'w') as f:
@@ -282,7 +282,7 @@ class RunImages:
             return
 
     def image_paths(self):
-        paths = glob.glob('./**/*.png', recursive=True,
+        paths = glob.glob('./Manuals/**/*.png', recursive=True,
                           root_dir=self.__images_dir())
         added_paths = []
         for path in paths:
@@ -554,22 +554,27 @@ if __name__ == "__main__":
                             get_cases("./cases.json"))
     runner.add_repo_branches(
         "https://github.com/JakeOShannessy/smv.git", [
-            "read-smv-no-global",
-            "read-tour-no-global",
-            "read-tour-no-global-2",
-            "read-hvac-no-global",
-            "read-hvac-no-global-2",
-            "meshes-no-global",
-            "read-colorbar-no-global",
-            "read-smoke-no-global",
-            "read-slice-no-global",
-            "read-label-no-global",
-            "read-part-no-global",
+            # "read-smv-no-global",
+            # "read-tour-no-global",
+            # "read-tour-no-global-2",
+            # "read-hvac-no-global",
+            # "meshes-no-global",
+            # "read-colorbar-no-global",
+            # "read-smoke-no-global",
+            # "read-slice-no-global",
+            # "read-label-no-global",
+            # "read-part-no-global",
+            # "get-config-dir",
+            "jsonrpc",
+            "improve-apis",
+            "scase-moves",
+            "scase",
         ])
     results = runner.run()
     print("base hash:", results["base_hash"])
     for comparison in results["comparisons"]:
-        print(f"{bcolors.OKCYAN}{comparison["url"]} {comparison["branch"]} {comparison["hash"] if "hash" in comparison else ""}:{bcolors.ENDC}")
+        print(f"{bcolors.OKCYAN}{comparison["url"]} {comparison["branch"]} {
+              comparison["hash"] if "hash" in comparison else ""}:{bcolors.ENDC}")
         if "error" in comparison and comparison["error"]:
             print(f"  {bcolors.FAIL}BUILD FAILED{bcolors.ENDC}")
         else:

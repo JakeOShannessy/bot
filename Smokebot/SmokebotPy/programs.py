@@ -3,7 +3,7 @@ import subprocess
 import os
 import re
 import platform
-
+from pathlib import Path
 
 def run(program, directory, filename, processes=None):
     print("running", filename)
@@ -70,7 +70,7 @@ def run_cmake(path, build_path):
         raise Exception(f'cmake build failed')
 
 
-def install_cmake(build_path, install_prefix,release=False):
+def install_cmake(build_path, install_prefix, release=False):
     args = ["cmake", "--install", build_path, "--prefix", install_prefix]
     if release:
         args += ["--config", "Release"]
@@ -85,20 +85,29 @@ def install_cmake(build_path, install_prefix,release=False):
 
 
 def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
-    env = None
+    # TODO: errors thrown here will just get swallowed
+    env = os.environ.copy()
     if objpath:
-        env = os.environ.copy()
         env["SMOKEVIEW_OBJECT_DEFS"] = os.path.abspath(objpath)
+    if platform.system() != "Windows":
+        # sometimes smokeview has shared libs we need to be able to load
+        existing_ld_path = os.environ.get('LD_LIBRARY_PATH')
+        if existing_ld_path:
+            # prepend to existing LD_LIBRARY_PATH
+            env["LD_LIBRARY_PATH"] = os.path.pardir(
+                os.path.abspath(smv_path)) + ";" + existing_ld_path
+        else:
+            env["LD_LIBRARY_PATH"] = Path(os.path.abspath(smv_path)).parent.parent.joinpath("lib64")
     args = [os.path.abspath(smv_path), "-runscript", filename]
     result = subprocess.run(args, shell=False,
                             capture_output=True, text=True, cwd=directory, env=env)
     if result.returncode != 0:
-        print("stderr:",result.stderr)
-        print("stdour:",result.stdout)
-    (fdsprefix,ext) = os.path.splitext(os.path.basename(filename))
-    with open(f"{os.path.join(directory,fdsprefix)}.stderr", 'w') as f:
+        print("stderr:", result.stderr)
+        print("stdour:", result.stdout)
+    (fdsprefix, ext) = os.path.splitext(os.path.basename(filename))
+    with open(f"{os.path.join(directory, fdsprefix)}.stderr", 'w') as f:
         f.write(result.stderr)
-    with open(f"{os.path.join(directory,fdsprefix)}.stdout", 'w') as f:
+    with open(f"{os.path.join(directory, fdsprefix)}.stdout", 'w') as f:
         f.write(result.stdout)
     return result
 

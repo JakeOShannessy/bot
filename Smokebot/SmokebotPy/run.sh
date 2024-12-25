@@ -1,3 +1,3 @@
 #!/bin/bash
 
-xvfb-run --server-args="-screen 0 1024x768x24 -ac +extension GLX +render -noreset" ./run.py
+xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24 -ac +extension GLX +render -noreset" ./run.py
