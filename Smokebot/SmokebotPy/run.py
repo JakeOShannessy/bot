@@ -554,21 +554,10 @@ if __name__ == "__main__":
                             get_cases("./cases.json"))
     runner.add_repo_branches(
         "https://github.com/JakeOShannessy/smv.git", [
-            # "read-smv-no-global",
-            # "read-tour-no-global",
-            # "read-tour-no-global-2",
-            # "read-hvac-no-global",
-            # "meshes-no-global",
-            # "read-colorbar-no-global",
-            # "read-smoke-no-global",
-            # "read-slice-no-global",
-            # "read-label-no-global",
-            # "read-part-no-global",
-            # "get-config-dir",
-            "jsonrpc",
-            "improve-apis",
+            # "jsonrpc",
             "scase-moves",
             "scase",
+            "sep-init",
         ])
     results = runner.run()
     print("base hash:", results["base_hash"])
