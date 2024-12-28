@@ -5,6 +5,17 @@ import re
 import platform
 from pathlib import Path
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 def run(program, directory, filename, processes=None):
     print("running", filename)
     cmd = "fds6.9.1"
@@ -34,6 +45,10 @@ def git_get_hash(url, branch) -> str:
         args += ["--branch", branch]
     out = subprocess.run(args, shell=False,
                          capture_output=True, text=True)
+    if len(out.stdout) == 0:
+        print(f"{bcolors.FAIL}ERROR{bcolors.ENDC}",
+              url, branch, "no such branch")
+        raise Exception(f'no such branch {url} {branch}')
     return out.stdout.split()[0]
 
 
@@ -97,7 +112,8 @@ def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
             env["LD_LIBRARY_PATH"] = os.path.pardir(
                 os.path.abspath(smv_path)) + ";" + existing_ld_path
         else:
-            env["LD_LIBRARY_PATH"] = Path(os.path.abspath(smv_path)).parent.parent.joinpath("lib64")
+            env["LD_LIBRARY_PATH"] = Path(os.path.abspath(
+                smv_path)).parent.parent.joinpath("lib64")
     args = [os.path.abspath(smv_path), "-runscript", filename]
     result = subprocess.run(args, shell=False,
                             capture_output=True, text=True, cwd=directory, env=env)

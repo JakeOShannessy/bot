@@ -17,7 +17,6 @@ p = '~/smv/Verification'
 
 default_root_path = "smokebot_temp_dir"
 
-
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -28,7 +27,6 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-
 
 def create_case_dir_name(path):
     return os.path.basename(path) + '.d'
@@ -94,6 +92,7 @@ class SmvProgramRepo:
         self.repo_url = url
         self.branch = branch
         self.hash = programs.git_get_hash(self.repo_url, self.branch)
+        print("hash", branch, self.hash)
         self.base_path = os.path.join(root_path, "run", self.hash)
         self.setup_complete = False
         self.release = False
