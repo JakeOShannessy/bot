@@ -92,7 +92,6 @@ class SmvProgramRepo:
         self.repo_url = url
         self.branch = branch
         self.hash = programs.git_get_hash(self.repo_url, self.branch)
-        print("hash", branch, self.hash)
         self.base_path = os.path.join(root_path, "run", self.hash)
         self.setup_complete = False
         self.release = False
