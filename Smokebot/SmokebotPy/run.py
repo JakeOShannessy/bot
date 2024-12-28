@@ -564,6 +564,14 @@ if __name__ == "__main__":
             "deg-step-6",
             "deg-step-7",
             "deg-step-8",
+            "deg-step-9",
+            "deg-step-10",
+            "deg-step-11",
+            "deg-step-12",
+            "deg-step-13",
+            "deg-step-14",
+            "deg-step-15",
+            "deg-step-16",
             "sep-init",
         ])
     results = runner.run()
