@@ -555,8 +555,15 @@ if __name__ == "__main__":
     runner.add_repo_branches(
         "https://github.com/JakeOShannessy/smv.git", [
             # "jsonrpc",
-            "scase-moves",
             "scase",
+            "deg-step-1",
+            "deg-step-2",
+            "deg-step-3",
+            "deg-step-4",
+            "deg-step-5",
+            "deg-step-6",
+            "deg-step-7",
+            "deg-step-8",
             "sep-init",
         ])
     results = runner.run()
