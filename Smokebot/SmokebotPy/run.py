@@ -17,7 +17,6 @@ p = '~/smv/Verification'
 
 default_root_path = "smokebot_temp_dir"
 
-
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -28,7 +27,6 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-
 
 def create_case_dir_name(path):
     return os.path.basename(path) + '.d'

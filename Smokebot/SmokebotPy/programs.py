@@ -5,6 +5,16 @@ import re
 import platform
 from pathlib import Path
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 def run(program, directory, filename, processes=None):
     print("running", filename)
@@ -35,6 +45,10 @@ def git_get_hash(url, branch) -> str:
         args += ["--branch", branch]
     out = subprocess.run(args, shell=False,
                          capture_output=True, text=True)
+    if len(out.stdout) == 0:
+        print(f"{bcolors.FAIL}ERROR{bcolors.ENDC}",
+              url, branch, "no such branch")
+        raise Exception(f'no such branch {url} {branch}')
     return out.stdout.split()[0]
 
 
