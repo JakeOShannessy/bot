@@ -118,7 +118,8 @@ class SmvProgramRepo:
             return "smokeview"
 
     def __object_path(self):
-        return os.path.join(self.__build_path(), "objects.svo")
+        return os.path.join(self.repo_path(), "Build","for_bundle","objects.svo")
+        # return os.path.join(self.__build_path(), "objects.svo")
 
     objpath = property(__object_path)
 
@@ -266,7 +267,7 @@ class RunImages:
                 os.remove(stop_path(dest_script_path))
             smv_name = fds_prefix + ".smv"
             result = programs.run_smv_script(
-                case_rundir, smv_name, smv_path=smv, objpath=os.path.abspath(self.objpath))
+                case_rundir, smv_name, smv_path=smv, objpath=self.objpath)
             if result.returncode == 0:
                 print(f"{bcolors.OKGREEN}OK{bcolors.ENDC}",
                       f"completed: {smv_name}", sep="\t")
@@ -284,8 +285,13 @@ class RunImages:
         if os.path.exists(sentinel_path):
             return
         else:
-            res = list(self.executor.map(self.run_script, itertools.repeat(
-                dir), self.cases, itertools.repeat(src)))
+            res = []
+            for f in self.cases:
+                print("case:", f.path)
+                result = self.run_script(dir,f,src)
+                res.append(result)
+            # res = list(self.executor.map(self.run_script, itertools.repeat(
+            #     dir), self.cases, itertools.repeat(src)))
             open(sentinel_path, 'w')
             return
 
@@ -563,16 +569,9 @@ if __name__ == "__main__":
     runner.add_repo_branches(
         "https://github.com/JakeOShannessy/smv.git", [
             "jsonrpc",
-            # "smvq-steps",
-            # "scase",
-            # "deg-sweep",
-            # "deg-move-2",
-            "remove-use_bw",
-            "remove-displaylists",
-            "test-displaylists",
-            # "no-use-bw",
-            # "move-init",
-            # "sep-init",
+            # "remove-use_bw",
+            # "remove-displaylists",
+            # "test-displaylists",
         ])
     results = runner.run()
     print("base hash:", results["base_hash"])

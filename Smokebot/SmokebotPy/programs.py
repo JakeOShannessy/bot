@@ -5,6 +5,7 @@ import re
 import platform
 from pathlib import Path
 
+
 def run(program, directory, filename, processes=None):
     print("running", filename)
     cmd = "fds6.9.1"
@@ -97,13 +98,14 @@ def run_smv_script(directory, filename, smv_path="smokeview", objpath=None):
             env["LD_LIBRARY_PATH"] = os.path.pardir(
                 os.path.abspath(smv_path)) + ";" + existing_ld_path
         else:
-            env["LD_LIBRARY_PATH"] = Path(os.path.abspath(smv_path)).parent.parent.joinpath("lib64")
+            env["LD_LIBRARY_PATH"] = Path(os.path.abspath(
+                smv_path)).parent.parent.joinpath("lib64")
     args = [os.path.abspath(smv_path), "-runscript", filename]
-    result = subprocess.run(args, shell=False,
-                            capture_output=True, text=True, cwd=directory, env=env)
+    result = subprocess.run(
+        args, shell=False, capture_output=True, text=True, cwd=directory, env=env)
     if result.returncode != 0:
         print("stderr:", result.stderr)
-        print("stdour:", result.stdout)
+        print("stdout:", result.stdout)
     (fdsprefix, ext) = os.path.splitext(os.path.basename(filename))
     with open(f"{os.path.join(directory, fdsprefix)}.stderr", 'w') as f:
         f.write(result.stderr)
