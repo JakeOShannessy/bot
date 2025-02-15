@@ -142,6 +142,13 @@ class SmvProgramRepo:
             bin_path = os.path.join(
                 self.__install_path(), "bin", self.__exec_name())
         if not os.path.exists(bin_path):
+            if self.release:
+                bin_path = os.path.join(
+                    self.__install_path(), self.__exec_name())
+            else:
+                bin_path = os.path.join(
+                    self.__install_path(), self.__exec_name())
+        if not os.path.exists(bin_path):
             print(bin_path, "does not exist")
             if not self.setup_complete:
                 self.setup()
@@ -189,7 +196,7 @@ class ReferenceImagesZip:
 
 
 class RunImages:
-    def __init__(self, cases: list[Case] = [], src="smokeview", dir="image_source"):
+    def __init__(self, cases: list[Case] = [], src="smokeview", dir="image_source", objpath=None):
         self.dir = dir
         # if not src:
         #     self.src = SmvProgramRepo(os.path.join(self.dir, "run"))
@@ -201,6 +208,7 @@ class RunImages:
                      "SMV_Verification_Guide"]
         self.override_snapshot = None
         self.setup_complete = False
+        self.objpath = objpath
 
     def __snapshot_path(self):
         if self.override_snapshot:
@@ -258,7 +266,7 @@ class RunImages:
                 os.remove(stop_path(dest_script_path))
             smv_name = fds_prefix + ".smv"
             result = programs.run_smv_script(
-                case_rundir, smv_name, smv_path=smv, objpath=os.path.abspath(os.path.join(smv, "../../../repo/Build/for_bundle/objects.svo")))
+                case_rundir, smv_name, smv_path=smv, objpath=os.path.abspath(self.objpath))
             if result.returncode == 0:
                 print(f"{bcolors.OKGREEN}OK{bcolors.ENDC}",
                       f"completed: {smv_name}", sep="\t")
@@ -421,7 +429,7 @@ def run_images(repo_url: str, branch: str, snapshot_path: str, cases):
     for case in cases:
         adjusted_cases.append(case.adjusted(sm_a.repo_path()))
     ri = RunImages(adjusted_cases,
-                   src=sm_a.path, dir=sm_a.base_path)
+                   src=sm_a.path, dir=sm_a.base_path,objpath=sm_a.objpath)
     ri.override_snapshot = snapshot_path
     ri.run()
     return {"image_paths": ri.image_paths(), "hash": sm_a.hash, "url": sm_a.repo_url, "branch": sm_a.branch}
@@ -554,25 +562,17 @@ if __name__ == "__main__":
                             get_cases("./cases.json"))
     runner.add_repo_branches(
         "https://github.com/JakeOShannessy/smv.git", [
-            # "jsonrpc",
-            "scase",
-            "deg-step-1",
-            "deg-step-2",
-            "deg-step-3",
-            "deg-step-4",
-            "deg-step-5",
-            "deg-step-6",
-            "deg-step-7",
-            "deg-step-8",
-            "deg-step-9",
-            "deg-step-10",
-            "deg-step-11",
-            "deg-step-12",
-            "deg-step-13",
-            "deg-step-14",
-            "deg-step-15",
-            "deg-step-16",
-            "sep-init",
+            "jsonrpc",
+            # "smvq-steps",
+            # "scase",
+            # "deg-sweep",
+            # "deg-move-2",
+            "remove-use_bw",
+            "remove-displaylists",
+            "test-displaylists",
+            # "no-use-bw",
+            # "move-init",
+            # "sep-init",
         ])
     results = runner.run()
     print("base hash:", results["base_hash"])

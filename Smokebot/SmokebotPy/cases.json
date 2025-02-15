@@ -147,6 +147,12 @@
     {
         "program": "fds",
         "category": "visualization",
+        "input_path": "./Verification/Visualization/cad_test.fds",
+        "light": true
+    },
+    {
+        "program": "fds",
+        "category": "visualization",
         "input_path": "./Verification/Visualization/smoke_test3.fds"
     },
     {
